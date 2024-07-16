@@ -1,16 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-//typescript types defined here
-export interface TranscriptItem {
-  text: string;
-  start: number;
-  duration: number;
-}
 
-export interface TranscriptResponse {
-  videoId: string;
-  items: TranscriptItem[];
-}
 
 const transcriptsData: any = {
   ykG8dVplZ_g: {

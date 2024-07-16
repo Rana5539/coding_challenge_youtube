@@ -1,27 +1,57 @@
-import React from 'react'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { fetchTranscript, fetchTranslation } from '../lib/api';
+import { TranscriptItem } from '../types/transcript';
+import { TranslationItem } from '../types/translation';
 
+const HomePage = () => {
+  const router = useRouter();
+  const { videoId } = router.query;
 
+  const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
+  const [translation, setTranslation] = useState<TranslationItem[]>([]);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (videoId) {
+      fetchTranscript(videoId as string).then(data => setTranscript(data.items));
+      fetchTranslation(videoId as string).then(data => setTranslation(data.items));
+    }
+  }, [videoId]);
 
-export default function Home() {
-  
+  const handleTimeUpdate = (event: React.SyntheticEvent<HTMLVideoElement>) => {
+    setCurrentTime(event.currentTarget.currentTime);
+  };
+
+  const handlePlayPause = (event: React.SyntheticEvent<HTMLVideoElement>) => {
+    setIsPlaying(!event.currentTarget.paused);
+  };
+
+  const findCurrentTranscript = () => {
+    return transcript.find(item => currentTime >= item.start && currentTime <= item.start + item.duration);
+  };
+
   return (
-  <>
- <div className="flex w-4/5 justify-between mt-36 mx-auto items-center">
-  <div className="flex flex-col items-center">
-    <h1 style={{fontSize:'25px'}}>Transcript</h1>
-    <div className="w-60vh bg-black h-20vh rounded-3xl"></div>
-    <h1 style={{fontSize:'25px'}} className='mt-10'>Translation</h1>
-    <div className="w-60vh bg-black h-20vh rounded-3xl "></div>
-  </div>
+    <div className="container mx-auto p-4">
+      <div className="video-container mb-4">
+        {videoId && (
+          <video
+            src={`https://www.youtube.com/embed/${videoId}`}
+            controls
+            onTimeUpdate={handleTimeUpdate}
+            onPlay={handlePlayPause}
+            onPause={handlePlayPause}
+          />
+        )}
+      </div>
+      <div className="transcript-container">
+        {isPlaying && findCurrentTranscript() && (
+          <p className="transcript-text">{findCurrentTranscript()?.text}</p>
+        )}
+      </div>
+    </div>
+  );
+};
 
-  <iframe
-    width="500"
-    height="300"
-    src="https://www.youtube.com/embed/ykG8dVplZ_g?si=QXPbhUiw-rxysBGe"
-    className="ml-5">
-  </iframe>
-</div>
-</>
-)
-}
+export default HomePage;
